@@ -78,3 +78,9 @@ export async function setItemVisibilityOnChain(ethereum, itemId, isPublic) {
   const tx = await contract.setItemVisibility(itemId, isPublic);
   return waitForTransaction(tx);
 }
+
+export async function transferOwnershipOnChain(ethereum, itemId, newOwner, transactionPrice) {
+  const contract = await getSignerUsedMarketContract(ethereum);
+  const tx = await contract.transferOwnership(itemId, newOwner, ethToWei(transactionPrice));
+  return waitForTransaction(tx);
+}

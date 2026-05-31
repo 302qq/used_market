@@ -7,6 +7,7 @@ import {
   isUsedMarketConfigured,
   registerItemOnChain,
   setItemVisibilityOnChain,
+  transferOwnershipOnChain,
   updateItemOnChain
 } from "../services/usedMarket.js";
 import { filterPublicItems } from "../utils/items.js";
@@ -15,6 +16,10 @@ const ItemRegistryContext = createContext(null);
 
 function createLocalTxHash(itemId) {
   return `local-preview-${String(itemId).padStart(4, "0")}`;
+}
+
+function createTransferTxHash(itemId, count) {
+  return `local-transfer-${String(itemId).padStart(4, "0")}-${String(count).padStart(2, "0")}`;
 }
 
 export function ItemRegistryProvider({ children }) {
@@ -156,6 +161,62 @@ export function ItemRegistryProvider({ children }) {
     }
   }
 
+  async function transferOwnership(itemId, newOwner, transactionPrice, wallet) {
+    const item = getItemById(itemId);
+    const activeAccount = wallet?.account || connectedWallet;
+
+    if (!item) throw new Error("물품을 찾을 수 없습니다.");
+    if (!isOwner(item, wallet)) throw new Error("현재 소유자만 소유권을 이전할 수 있습니다.");
+    if (!item.isPublic) throw new Error("Public 물품만 소유권 이전이 가능합니다.");
+
+    if (isUsedMarketConfigured()) {
+      if (!wallet.account) throw new Error("MetaMask 지갑을 먼저 연결해주세요.");
+      if (!wallet.isSepolia) throw new Error("Sepolia 네트워크로 전환해주세요.");
+
+      const result = await transferOwnershipOnChain(getEthereum(), itemId, newOwner, transactionPrice);
+      await refreshItems();
+      await getTransactionHistory(itemId);
+      return {
+        from: activeAccount,
+        to: newOwner,
+        transactionPrice: `${transactionPrice.trim()} ETH`,
+        txHash: result.hash,
+        mode: "chain"
+      };
+    }
+
+    const existingHistory = transactionHistories[Number(itemId)] || [];
+    const record = {
+      id: `${itemId}-${existingHistory.length}`,
+      itemId: Number(itemId),
+      itemName: item.name,
+      date: new Date().toLocaleString("ko-KR"),
+      from: activeAccount,
+      to: newOwner,
+      transactionPrice: `${transactionPrice.trim()} ETH`,
+      timestamp: Math.floor(Date.now() / 1000),
+      txHash: createTransferTxHash(itemId, existingHistory.length + 1)
+    };
+
+    setItems((current) =>
+      current.map((currentItem) =>
+        Number(currentItem.itemId) === Number(itemId) ? { ...currentItem, currentOwner: newOwner } : currentItem
+      )
+    );
+    setTransactionHistories((current) => ({
+      ...current,
+      [Number(itemId)]: [...(current[Number(itemId)] || []), record]
+    }));
+
+    return {
+      from: activeAccount,
+      to: newOwner,
+      transactionPrice: record.transactionPrice,
+      txHash: record.txHash,
+      mode: "preview"
+    };
+  }
+
   const value = useMemo(
     () => ({
       items,
@@ -168,7 +229,8 @@ export function ItemRegistryProvider({ children }) {
       getItemById,
       getTransactionHistory,
       setItemVisibility,
-      updateItem
+      updateItem,
+      transferOwnership
     }),
     [items, transactionHistories, isLoading, error]
   );
