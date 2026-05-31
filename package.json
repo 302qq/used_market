@@ -7,13 +7,21 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node scripts/verify-phase1.mjs"
+    "test": "npm run test:phase1 && npm run test:contracts",
+    "test:phase1": "node scripts/verify-phase1.mjs",
+    "test:contracts": "hardhat test",
+    "compile:contracts": "hardhat compile"
   },
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.9",
+    "@nomicfoundation/hardhat-ethers": "^3.0.9",
+    "chai": "^4.5.0",
+    "ethers": "^6.15.0",
+    "hardhat": "^2.26.3",
     "vite": "^5.4.11"
   }
 }
