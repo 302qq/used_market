@@ -1,12 +1,30 @@
+import { useEffect, useMemo } from "react";
 import EmptyState from "../components/EmptyState.jsx";
-import { connectedWallet, mockTransactions } from "../data/mockData.js";
+import { useItemRegistry } from "../context/ItemRegistryContext.jsx";
+import { useWallet } from "../context/WalletContext.jsx";
 import { shortenAddress } from "../utils/format.js";
+import { formatTransactionDate, getParticipatingTransactions, getTxHashLabel } from "../utils/ownership.js";
 
 export default function TransactionHistory() {
-  const records = mockTransactions.filter((record) => {
-    const wallet = connectedWallet.toLowerCase();
-    return record.from.toLowerCase() === wallet || record.to.toLowerCase() === wallet;
-  });
+  const wallet = useWallet();
+  const registry = useItemRegistry();
+
+  useEffect(() => {
+    registry.refreshAllTransactionHistories();
+  }, [wallet.account, registry.items.length]);
+
+  const records = useMemo(() => {
+    return getParticipatingTransactions(registry.items, registry.transactionHistories, wallet.account);
+  }, [registry.items, registry.transactionHistories, wallet.account]);
+
+  if (!wallet.account) {
+    return (
+      <EmptyState
+        title="지갑 연결이 필요합니다."
+        description="Transaction History는 현재 연결된 지갑이 참여한 거래만 표시합니다."
+      />
+    );
+  }
 
   return (
     <div className="pageStack">
@@ -30,11 +48,11 @@ export default function TransactionHistory() {
             {records.map((record) => (
               <a className="tableRow" href={`#/item/${record.itemId}`} key={record.id}>
                 <span>{record.itemName}</span>
-                <span>{record.date}</span>
+                <span>{formatTransactionDate(record)}</span>
                 <span>{shortenAddress(record.from)}</span>
                 <span>{shortenAddress(record.to)}</span>
                 <strong>{record.transactionPrice}</strong>
-                <span>{record.txHash}</span>
+                <span>{getTxHashLabel(record)}</span>
               </a>
             ))}
           </div>

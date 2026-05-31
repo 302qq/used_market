@@ -115,6 +115,20 @@ export function ItemRegistryProvider({ children }) {
     return transactionHistories[Number(itemId)] || [];
   }
 
+  async function refreshAllTransactionHistories() {
+    if (!isUsedMarketConfigured()) return transactionHistories;
+
+    const entries = await Promise.all(
+      items.map(async (item) => {
+        const records = await fetchTransactionHistory(getEthereum(), item.itemId);
+        return [Number(item.itemId), records];
+      })
+    );
+    const nextHistories = Object.fromEntries(entries);
+    setTransactionHistories(nextHistories);
+    return nextHistories;
+  }
+
   async function setItemVisibility(itemId, isPublic, wallet) {
     const item = getItemById(itemId);
     if (!item) throw new Error("물품을 찾을 수 없습니다.");
@@ -228,6 +242,7 @@ export function ItemRegistryProvider({ children }) {
       registerItem,
       getItemById,
       getTransactionHistory,
+      refreshAllTransactionHistories,
       setItemVisibility,
       updateItem,
       transferOwnership

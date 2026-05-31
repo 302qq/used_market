@@ -1,26 +1,38 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Button from "../components/Button.jsx";
 import EmptyState from "../components/EmptyState.jsx";
-import { connectedWallet, mockItems, mockTransactions } from "../data/mockData.js";
+import { useItemRegistry } from "../context/ItemRegistryContext.jsx";
+import { useWallet } from "../context/WalletContext.jsx";
+import { getOwnedItems, getTransferredItems } from "../utils/ownership.js";
 import { shortenAddress } from "../utils/format.js";
 
 export default function MyItems() {
+  const wallet = useWallet();
+  const registry = useItemRegistry();
   const [tab, setTab] = useState("Owned");
 
+  useEffect(() => {
+    registry.refreshAllTransactionHistories();
+  }, [wallet.account, registry.items.length]);
+
   const ownedItems = useMemo(() => {
-    return mockItems.filter((item) => item.currentOwner.toLowerCase() === connectedWallet.toLowerCase());
-  }, []);
+    return getOwnedItems(registry.items, wallet.account);
+  }, [registry.items, wallet.account]);
 
   const transferredItems = useMemo(() => {
-    const transferredIds = new Set(
-      mockTransactions
-        .filter((record) => record.from.toLowerCase() === connectedWallet.toLowerCase())
-        .map((record) => record.itemId)
-    );
-    return mockItems.filter((item) => transferredIds.has(item.itemId));
-  }, []);
+    return getTransferredItems(registry.items, registry.transactionHistories, wallet.account);
+  }, [registry.items, registry.transactionHistories, wallet.account]);
 
   const items = tab === "Owned" ? ownedItems : transferredItems;
+
+  if (!wallet.account) {
+    return (
+      <EmptyState
+        title="지갑 연결이 필요합니다."
+        description="My Items는 현재 연결된 지갑 주소를 기준으로 Owned와 Transferred를 계산합니다."
+      />
+    );
+  }
 
   return (
     <div className="pageStack">
@@ -53,7 +65,7 @@ export default function MyItems() {
                 <a href={`#/item/${item.itemId}`}>
                   <Button variant="secondary">Detail</Button>
                 </a>
-                {tab === "Owned" ? (
+                {tab === "Owned" && item.isPublic ? (
                   <a href={`#/transfer/${item.itemId}`}>
                     <Button>Transfer</Button>
                   </a>
@@ -65,7 +77,7 @@ export default function MyItems() {
       ) : (
         <EmptyState
           title={`${tab} 항목이 없습니다.`}
-          description="연결된 지갑 기준으로 표시할 물품이 없습니다."
+          description="현재 연결된 지갑 기준으로 표시할 물품이 없습니다."
           action={
             <a href="#/market">
               <Button variant="secondary">Market으로 이동</Button>

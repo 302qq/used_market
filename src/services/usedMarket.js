@@ -1,4 +1,4 @@
-import { USED_MARKET_CONTRACT_ADDRESS } from "../config/chain.js";
+import { CONTRACT_DEPLOY_BLOCK, USED_MARKET_CONTRACT_ADDRESS } from "../config/chain.js";
 import { getReadOnlyUsedMarketContract, getSignerUsedMarketContract } from "./contracts.js";
 import { waitForTransaction } from "./transactions.js";
 import { ethToWei, weiToEth } from "../utils/price.js";
@@ -17,14 +17,27 @@ export async function fetchAllItems(ethereum) {
 export async function fetchTransactionHistory(ethereum, itemId) {
   const contract = getReadOnlyUsedMarketContract(ethereum);
   const records = await contract.getTransactionHistory(itemId);
+  const txHashes = await fetchOwnershipTransferTxHashes(contract, itemId);
+
   return records.map((record, index) => ({
     id: `${itemId}-${index}`,
     itemId: Number(itemId),
     from: record.from,
     to: record.to,
     transactionPrice: `${weiToEth(record.transactionPrice)} ETH`,
-    timestamp: Number(record.timestamp)
+    timestamp: Number(record.timestamp),
+    txHash: txHashes[index] || "조회 불가"
   }));
+}
+
+async function fetchOwnershipTransferTxHashes(contract, itemId) {
+  try {
+    const filter = contract.filters.OwnershipTransferred(itemId);
+    const logs = await contract.queryFilter(filter, CONTRACT_DEPLOY_BLOCK || 0, "latest");
+    return logs.map((log) => log.transactionHash || "조회 불가");
+  } catch {
+    return [];
+  }
 }
 
 function extractItemIdFromReceipt(contract, receipt) {
