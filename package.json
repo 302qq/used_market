@@ -7,7 +7,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "npm run test:phase1 && npm run test:contracts && npm run test:phase3 && npm run test:phase4 && npm run test:phase5 && npm run test:phase6 && npm run test:phase7",
+    "test": "npm run test:phase1 && npm run test:contracts && npm run test:phase3 && npm run test:phase4 && npm run test:phase5 && npm run test:phase6 && npm run test:phase7 && npm run test:phase8",
     "test:phase1": "node scripts/verify-phase1.mjs",
     "test:contracts": "hardhat test",
     "test:phase3": "node scripts/verify-phase3.mjs",
@@ -15,6 +15,7 @@
     "test:phase5": "node scripts/verify-phase5.mjs",
     "test:phase6": "node scripts/verify-phase6.mjs",
     "test:phase7": "node scripts/verify-phase7.mjs",
+    "test:phase8": "node scripts/verify-phase8.mjs",
     "compile:contracts": "hardhat compile"
   },
   "dependencies": {

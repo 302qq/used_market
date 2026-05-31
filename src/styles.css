@@ -285,6 +285,47 @@ img {
   font-size: 18px;
 }
 
+.runtimePanel {
+  display: grid;
+  gap: 16px;
+  border: 1px solid #e3ded5;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 20px;
+}
+
+.runtimePanel h2 {
+  margin: 4px 0 0;
+}
+
+.runtimeGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.runtimeCheck {
+  display: grid;
+  gap: 6px;
+  border-radius: 8px;
+  padding: 14px;
+  background: #f7f5f0;
+}
+
+.runtimeCheck span {
+  color: #68766b;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.runtimeCheck.ok strong {
+  color: #1c6b46;
+}
+
+.runtimeCheck.warn strong {
+  color: #8f4b2e;
+}
+
 .sectionBlock {
   display: grid;
   gap: 18px;
@@ -798,6 +839,7 @@ dd {
   .quickGrid,
   .cardGrid,
   .cardGrid.compact,
+  .runtimeGrid,
   .toolbar,
   .nav {
     grid-template-columns: 1fr;

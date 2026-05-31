@@ -1,5 +1,6 @@
 import Button from "../components/Button.jsx";
 import ItemCard from "../components/ItemCard.jsx";
+import RuntimeStatus from "../components/RuntimeStatus.jsx";
 import { useItemRegistry } from "../context/ItemRegistryContext.jsx";
 import { filterPublicItems } from "../utils/items.js";
 
@@ -47,6 +48,8 @@ export default function Home() {
         </a>
       </section>
 
+      <RuntimeStatus />
+
       <section className="sectionBlock">
         <div className="sectionHeader">
           <div>
@@ -55,11 +58,15 @@ export default function Home() {
           </div>
           <a href="#/market">전체 보기 →</a>
         </div>
-        <div className="cardGrid compact">
-          {recentItems.map((item) => (
-            <ItemCard key={item.itemId} item={item} />
-          ))}
-        </div>
+        {recentItems.length ? (
+          <div className="cardGrid compact">
+            {recentItems.map((item) => (
+              <ItemCard key={item.itemId} item={item} />
+            ))}
+          </div>
+        ) : (
+          <p className="pageAlert">표시할 Public 물품이 없습니다.</p>
+        )}
       </section>
     </div>
   );
