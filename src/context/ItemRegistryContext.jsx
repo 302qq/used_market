@@ -1,7 +1,14 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { connectedWallet, mockItems } from "../data/mockData.js";
+import { connectedWallet, mockItems, mockTransactions } from "../data/mockData.js";
 import { getEthereum } from "../services/wallet.js";
-import { fetchAllItems, isUsedMarketConfigured, registerItemOnChain } from "../services/usedMarket.js";
+import {
+  fetchAllItems,
+  fetchTransactionHistory,
+  isUsedMarketConfigured,
+  registerItemOnChain,
+  setItemVisibilityOnChain,
+  updateItemOnChain
+} from "../services/usedMarket.js";
 import { filterPublicItems } from "../utils/items.js";
 
 const ItemRegistryContext = createContext(null);
@@ -12,6 +19,13 @@ function createLocalTxHash(itemId) {
 
 export function ItemRegistryProvider({ children }) {
   const [items, setItems] = useState(mockItems);
+  const [transactionHistories, setTransactionHistories] = useState(() =>
+    mockTransactions.reduce((histories, record) => {
+      const key = Number(record.itemId);
+      histories[key] = [...(histories[key] || []), record];
+      return histories;
+    }, {})
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -78,19 +92,93 @@ export function ItemRegistryProvider({ children }) {
     };
   }
 
+  function getItemById(itemId) {
+    return items.find((item) => Number(item.itemId) === Number(itemId));
+  }
+
+  async function getTransactionHistory(itemId) {
+    if (isUsedMarketConfigured()) {
+      try {
+        const records = await fetchTransactionHistory(getEthereum(), itemId);
+        setTransactionHistories((current) => ({ ...current, [Number(itemId)]: records }));
+        return records;
+      } catch (historyError) {
+        setError(historyError.message || "거래 이력을 불러오지 못했습니다.");
+      }
+    }
+
+    return transactionHistories[Number(itemId)] || [];
+  }
+
+  async function setItemVisibility(itemId, isPublic, wallet) {
+    const item = getItemById(itemId);
+    if (!item) throw new Error("물품을 찾을 수 없습니다.");
+    if (!isOwner(item, wallet)) throw new Error("현재 소유자만 공개 여부를 변경할 수 있습니다.");
+
+    if (isUsedMarketConfigured()) {
+      await setItemVisibilityOnChain(getEthereum(), itemId, isPublic);
+      await refreshItems();
+    } else {
+      setItems((current) =>
+        current.map((currentItem) =>
+          Number(currentItem.itemId) === Number(itemId) ? { ...currentItem, isPublic } : currentItem
+        )
+      );
+    }
+  }
+
+  async function updateItem(itemId, form, wallet) {
+    const item = getItemById(itemId);
+    const history = transactionHistories[Number(itemId)] || [];
+
+    if (!item) throw new Error("물품을 찾을 수 없습니다.");
+    if (!isOwner(item, wallet)) throw new Error("현재 소유자만 물품 정보를 수정할 수 있습니다.");
+    if (history.length > 0) throw new Error("소유권 이전 이력이 있는 물품은 정보를 수정할 수 없습니다.");
+
+    if (isUsedMarketConfigured()) {
+      await updateItemOnChain(getEthereum(), itemId, form);
+      await refreshItems();
+    } else {
+      setItems((current) =>
+        current.map((currentItem) =>
+          Number(currentItem.itemId) === Number(itemId)
+            ? {
+                ...currentItem,
+                name: form.name.trim(),
+                description: form.description.trim(),
+                listedPrice: `${form.listedPrice.trim()} ETH`,
+                category: form.category,
+                imageUrl: form.imageUrl.trim()
+              }
+            : currentItem
+        )
+      );
+    }
+  }
+
   const value = useMemo(
     () => ({
       items,
       publicItems: filterPublicItems(items),
+      transactionHistories,
       isLoading,
       error,
       refreshItems,
-      registerItem
+      registerItem,
+      getItemById,
+      getTransactionHistory,
+      setItemVisibility,
+      updateItem
     }),
-    [items, isLoading, error]
+    [items, transactionHistories, isLoading, error]
   );
 
   return <ItemRegistryContext.Provider value={value}>{children}</ItemRegistryContext.Provider>;
+}
+
+export function isOwner(item, wallet) {
+  const activeAccount = wallet?.account || connectedWallet;
+  return Boolean(item?.currentOwner && activeAccount && item.currentOwner.toLowerCase() === activeAccount.toLowerCase());
 }
 
 export function useItemRegistry() {

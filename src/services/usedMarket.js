@@ -1,7 +1,7 @@
 import { USED_MARKET_CONTRACT_ADDRESS } from "../config/chain.js";
 import { getReadOnlyUsedMarketContract, getSignerUsedMarketContract } from "./contracts.js";
 import { waitForTransaction } from "./transactions.js";
-import { ethToWei } from "../utils/price.js";
+import { ethToWei, weiToEth } from "../utils/price.js";
 import { normalizeContractItem } from "../utils/items.js";
 
 export function isUsedMarketConfigured() {
@@ -12,6 +12,19 @@ export async function fetchAllItems(ethereum) {
   const contract = getReadOnlyUsedMarketContract(ethereum);
   const items = await contract.getAllItems();
   return items.map(normalizeContractItem);
+}
+
+export async function fetchTransactionHistory(ethereum, itemId) {
+  const contract = getReadOnlyUsedMarketContract(ethereum);
+  const records = await contract.getTransactionHistory(itemId);
+  return records.map((record, index) => ({
+    id: `${itemId}-${index}`,
+    itemId: Number(itemId),
+    from: record.from,
+    to: record.to,
+    transactionPrice: `${weiToEth(record.transactionPrice)} ETH`,
+    timestamp: Number(record.timestamp)
+  }));
 }
 
 function extractItemIdFromReceipt(contract, receipt) {
@@ -45,4 +58,23 @@ export async function registerItemOnChain(ethereum, form) {
     itemId,
     txHash: waited.hash
   };
+}
+
+export async function updateItemOnChain(ethereum, itemId, form) {
+  const contract = await getSignerUsedMarketContract(ethereum);
+  const tx = await contract.updateItem(
+    itemId,
+    form.name.trim(),
+    form.description.trim(),
+    ethToWei(form.listedPrice),
+    form.category,
+    form.imageUrl.trim()
+  );
+  return waitForTransaction(tx);
+}
+
+export async function setItemVisibilityOnChain(ethereum, itemId, isPublic) {
+  const contract = await getSignerUsedMarketContract(ethereum);
+  const tx = await contract.setItemVisibility(itemId, isPublic);
+  return waitForTransaction(tx);
 }

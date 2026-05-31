@@ -593,6 +593,17 @@ dd {
   object-fit: cover;
 }
 
+.detailImageFallback {
+  display: grid;
+  place-items: center;
+  min-height: 460px;
+  background: #e7e0d6;
+  color: #68766b;
+  font-weight: 800;
+  text-align: center;
+  padding: 20px;
+}
+
 .detailInfo {
   display: grid;
   align-content: start;
@@ -608,6 +619,12 @@ dd {
 .detailInfo p {
   color: #607164;
   line-height: 1.7;
+}
+
+.ownerNote {
+  margin: 0;
+  color: #8f4b2e;
+  font-weight: 800;
 }
 
 .tableLike {
