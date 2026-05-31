@@ -1,9 +1,11 @@
 import Button from "../components/Button.jsx";
 import ItemCard from "../components/ItemCard.jsx";
-import { mockItems } from "../data/mockData.js";
+import { useItemRegistry } from "../context/ItemRegistryContext.jsx";
+import { filterPublicItems } from "../utils/items.js";
 
 export default function Home() {
-  const recentItems = mockItems.slice(0, 3);
+  const registry = useItemRegistry();
+  const recentItems = filterPublicItems(registry.items).slice(0, 3);
 
   return (
     <div className="pageStack">
