@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Button from "../components/Button.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { useItemRegistry } from "../context/ItemRegistryContext.jsx";

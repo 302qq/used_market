@@ -1,3 +1,5 @@
+import React from "react";
+
 export default function Toast({ message, type = "info" }) {
   if (!message) return null;
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import AppShell from "./components/AppShell.jsx";
 import Home from "./pages/Home.jsx";
 import Market from "./pages/Market.jsx";

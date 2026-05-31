@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { connectedWallet, mockItems, mockTransactions } from "../data/mockData.js";
 import { getEthereum } from "../services/wallet.js";
 import {

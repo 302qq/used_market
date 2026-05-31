@@ -1,3 +1,4 @@
+import React from "react";
 import Button from "./Button.jsx";
 import { useWallet } from "../context/WalletContext.jsx";
 import { shortenAddress } from "../utils/format.js";

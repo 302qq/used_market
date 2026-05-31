@@ -1,3 +1,4 @@
+import React from "react";
 import { getDeploymentConfig } from "../config/chain.js";
 import { useWallet } from "../context/WalletContext.jsx";
 

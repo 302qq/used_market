@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import EmptyState from "../components/EmptyState.jsx";
 import ItemCard from "../components/ItemCard.jsx";
 import TextInput from "../components/TextInput.jsx";
