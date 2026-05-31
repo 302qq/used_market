@@ -1,4 +1,5 @@
-import { connectedWallet } from "../data/mockData.js";
+import Button from "./Button.jsx";
+import { useWallet } from "../context/WalletContext.jsx";
 import { shortenAddress } from "../utils/format.js";
 
 function Sidebar({ routes, activePath }) {
@@ -29,16 +30,30 @@ function Sidebar({ routes, activePath }) {
 }
 
 function Header() {
+  const wallet = useWallet();
+  const statusLabel = wallet.account
+    ? shortenAddress(wallet.account)
+    : wallet.isInstalled
+      ? "Connect Wallet"
+      : "MetaMask 필요";
+
   return (
     <header className="topbar">
       <div>
         <p className="eyebrow">Sepolia Testnet MVP</p>
         <h1>소유권 이력 인증 서비스</h1>
+        {wallet.message ? <p className="walletNotice">{wallet.message}</p> : null}
       </div>
-      <div className="walletPill">
-        <span className="statusDot" />
-        {shortenAddress(connectedWallet)}
-      </div>
+      {wallet.account ? (
+        <div className={wallet.isSepolia ? "walletPill" : "walletPill warning"}>
+          <span className="statusDot" />
+          {statusLabel}
+        </div>
+      ) : (
+        <Button variant="secondary" onClick={wallet.connect} disabled={wallet.isConnecting || !wallet.isInstalled}>
+          {wallet.isConnecting ? "Connecting..." : statusLabel}
+        </Button>
+      )}
     </header>
   );
 }
