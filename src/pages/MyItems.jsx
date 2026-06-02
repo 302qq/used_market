@@ -30,6 +30,11 @@ export default function MyItems() {
       <EmptyState
         title="지갑 연결이 필요합니다."
         description="My Items는 현재 연결된 지갑 주소를 기준으로 Owned와 Transferred를 계산합니다."
+        action={
+          <Button variant="secondary" onClick={wallet.connect}>
+            Connect Wallet
+          </Button>
+        }
       />
     );
   }
@@ -39,7 +44,7 @@ export default function MyItems() {
       <section className="pageTitle">
         <p className="eyebrow">Wallet inventory</p>
         <h2>My Items</h2>
-        <p>현재 소유 중인 물품과 과거 이전한 물품을 탭으로 분리해 확인합니다.</p>
+        <p>현재 소유 중인 물품과 과거 이전한 물품을 탭으로 구분해 확인합니다.</p>
       </section>
 
       <div className="tabBar" role="tablist">
@@ -76,7 +81,7 @@ export default function MyItems() {
         </div>
       ) : (
         <EmptyState
-          title={`${tab} 항목이 없습니다.`}
+          title={`${tab} 목록이 없습니다.`}
           description="현재 연결된 지갑 기준으로 표시할 물품이 없습니다."
           action={
             <a href="#/market">

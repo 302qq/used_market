@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from "react";
+import Button from "../components/Button.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { useItemRegistry } from "../context/ItemRegistryContext.jsx";
 import { useWallet } from "../context/WalletContext.jsx";
@@ -22,6 +23,11 @@ export default function TransactionHistory() {
       <EmptyState
         title="지갑 연결이 필요합니다."
         description="Transaction History는 현재 연결된 지갑이 참여한 거래만 표시합니다."
+        action={
+          <Button variant="secondary" onClick={wallet.connect}>
+            Connect Wallet
+          </Button>
+        }
       />
     );
   }

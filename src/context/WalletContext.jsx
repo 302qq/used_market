@@ -11,6 +11,8 @@ import {
 } from "../services/wallet.js";
 
 const WalletContext = createContext(null);
+const WALLET_DISCONNECTED_KEY = "chaintrust.wallet.disconnected";
+const WALLET_STORAGE_PATTERNS = ["wallet", "metamask", "chaintrust"];
 
 const initialState = {
   account: "",
@@ -20,8 +22,47 @@ const initialState = {
   message: ""
 };
 
+function hasStoredDisconnect() {
+  try {
+    return window.localStorage.getItem(WALLET_DISCONNECTED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function setStoredDisconnect(value) {
+  try {
+    if (value) {
+      window.localStorage.setItem(WALLET_DISCONNECTED_KEY, "true");
+    } else {
+      window.localStorage.removeItem(WALLET_DISCONNECTED_KEY);
+      window.sessionStorage.removeItem(WALLET_DISCONNECTED_KEY);
+    }
+  } catch {
+    // Storage can be unavailable in restricted browser modes.
+  }
+}
+
+function clearWalletStorageState() {
+  for (const storage of [window.localStorage, window.sessionStorage]) {
+    try {
+      const keys = [];
+      for (let index = 0; index < storage.length; index += 1) {
+        const key = storage.key(index);
+        if (key && WALLET_STORAGE_PATTERNS.some((pattern) => key.toLowerCase().includes(pattern))) {
+          keys.push(key);
+        }
+      }
+      keys.forEach((key) => storage.removeItem(key));
+    } catch {
+      // Ignore inaccessible storage and keep the in-memory disconnect behavior.
+    }
+  }
+}
+
 export function WalletProvider({ children }) {
   const [wallet, setWallet] = useState(initialState);
+  const [isManuallyDisconnected, setIsManuallyDisconnected] = useState(() => hasStoredDisconnect());
 
   useEffect(() => {
     const ethereum = getEthereum();
@@ -40,10 +81,10 @@ export function WalletProvider({ children }) {
       const [accounts, chainId] = await Promise.all([getAccounts(ethereum), getCurrentChainId(ethereum)]);
       setWallet((current) => ({
         ...current,
-        account: accounts[0] || "",
+        account: isManuallyDisconnected ? "" : accounts[0] || "",
         chainId,
         isInstalled: true,
-        message: chainId && !isSepoliaChain(chainId) ? "Sepolia 네트워크로 전환해주세요." : ""
+        message: chainId && !isSepoliaChain(chainId) ? "Sepolia 네트워크로 전환해주세요." : current.message
       }));
     }
 
@@ -53,8 +94,12 @@ export function WalletProvider({ children }) {
       onAccountsChanged: (accounts) => {
         setWallet((current) => ({
           ...current,
-          account: accounts[0] || "",
-          message: accounts[0] ? current.message : "지갑 연결이 해제되었습니다."
+          account: isManuallyDisconnected ? "" : accounts[0] || "",
+          message: accounts[0]
+            ? isManuallyDisconnected
+              ? "MetaMask 계정이 변경되었습니다. 다시 Connect Wallet을 눌러 연결해주세요."
+              : current.message
+            : "지갑 연결이 해제되었습니다."
         }));
       },
       onChainChanged: (chainId) => {
@@ -65,7 +110,7 @@ export function WalletProvider({ children }) {
         }));
       }
     });
-  }, []);
+  }, [isManuallyDisconnected]);
 
   async function connect() {
     const ethereum = getEthereum();
@@ -73,6 +118,8 @@ export function WalletProvider({ children }) {
 
     try {
       const result = await connectWallet(ethereum);
+      setStoredDisconnect(false);
+      setIsManuallyDisconnected(false);
       setWallet((current) => ({
         ...current,
         account: result.account,
@@ -93,11 +140,35 @@ export function WalletProvider({ children }) {
     }
   }
 
+  async function disconnect() {
+    const ethereum = getEthereum();
+    clearWalletStorageState();
+    setStoredDisconnect(true);
+    setIsManuallyDisconnected(true);
+
+    let chainId = wallet.chainId;
+    try {
+      chainId = await getCurrentChainId(ethereum);
+    } catch {
+      // Keep the last known chain id when MetaMask is unavailable.
+    }
+
+    setWallet((current) => ({
+      ...current,
+      account: "",
+      chainId,
+      isConnecting: false,
+      isInstalled: isMetaMaskInstalled(ethereum),
+      message: "앱 내부 지갑 연결 상태가 해제되었습니다."
+    }));
+  }
+
   const value = useMemo(
     () => ({
       ...wallet,
       isSepolia: isSepoliaChain(wallet.chainId),
-      connect
+      connect,
+      disconnect
     }),
     [wallet]
   );

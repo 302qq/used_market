@@ -153,6 +153,14 @@ img {
   font-weight: 700;
 }
 
+.walletActions {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
 .walletPill.warning {
   border-color: #d99a76;
   color: #8f4b2e;

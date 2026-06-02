@@ -97,6 +97,20 @@ export default function TransferOwnership() {
     );
   }
 
+  if (!wallet.account) {
+    return (
+      <EmptyState
+        title="지갑 연결이 필요합니다."
+        description="Transfer Ownership은 현재 연결된 지갑이 물품의 현재 소유자인지 확인한 뒤 사용할 수 있습니다."
+        action={
+          <Button variant="secondary" onClick={wallet.connect}>
+            Connect Wallet
+          </Button>
+        }
+      />
+    );
+  }
+
   if (!owner) {
     return (
       <EmptyState

@@ -46,9 +46,14 @@ function Header() {
         {wallet.message ? <p className="walletNotice">{wallet.message}</p> : null}
       </div>
       {wallet.account ? (
-        <div className={wallet.isSepolia ? "walletPill" : "walletPill warning"}>
-          <span className="statusDot" />
-          {statusLabel}
+        <div className="walletActions">
+          <div className={wallet.isSepolia ? "walletPill" : "walletPill warning"}>
+            <span className="statusDot" />
+            {statusLabel}
+          </div>
+          <Button variant="secondary" onClick={wallet.disconnect}>
+            Disconnect
+          </Button>
         </div>
       ) : (
         <Button variant="secondary" onClick={wallet.connect} disabled={wallet.isConnecting || !wallet.isInstalled}>

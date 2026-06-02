@@ -254,7 +254,7 @@ export function ItemRegistryProvider({ children }) {
 }
 
 export function isOwner(item, wallet) {
-  const activeAccount = wallet?.account || connectedWallet;
+  const activeAccount = wallet?.account;
   return Boolean(item?.currentOwner && activeAccount && item.currentOwner.toLowerCase() === activeAccount.toLowerCase());
 }
 
