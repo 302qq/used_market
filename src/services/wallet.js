@@ -15,6 +15,18 @@ export function isMetaMaskInstalled(ethereum = getEthereum()) {
   return Boolean(ethereum?.isMetaMask);
 }
 
+export function isWalletAddress(address = "") {
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
+}
+
+export function getSelectedWalletAddress(ethereum = getEthereum(), accounts = []) {
+  const selectedAddress = ethereum?.selectedAddress;
+  if (isWalletAddress(selectedAddress)) {
+    return selectedAddress;
+  }
+  return accounts.find(isWalletAddress) || "";
+}
+
 export function isUserRejectedRequest(error) {
   return error?.code === 4001 || error?.code === "ACTION_REJECTED";
 }
@@ -59,9 +71,10 @@ export function createBrowserProvider(ethereum = getEthereum()) {
 export async function connectWallet(ethereum = getEthereum()) {
   const accounts = await requestAccounts(ethereum);
   const chainId = await getCurrentChainId(ethereum);
+  const account = getSelectedWalletAddress(ethereum, accounts);
 
   return {
-    account: accounts[0] || "",
+    account,
     accounts,
     chainId,
     isSepolia: isSepoliaChain(chainId)

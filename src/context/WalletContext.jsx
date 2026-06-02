@@ -5,6 +5,7 @@ import {
   getAccounts,
   getCurrentChainId,
   getEthereum,
+  getSelectedWalletAddress,
   getWalletMessage,
   isMetaMaskInstalled,
   subscribeWalletEvents
@@ -79,9 +80,10 @@ export function WalletProvider({ children }) {
       }
 
       const [accounts, chainId] = await Promise.all([getAccounts(ethereum), getCurrentChainId(ethereum)]);
+      const activeAccount = getSelectedWalletAddress(ethereum, accounts);
       setWallet((current) => ({
         ...current,
-        account: isManuallyDisconnected ? "" : accounts[0] || "",
+        account: isManuallyDisconnected ? "" : activeAccount,
         chainId,
         isInstalled: true,
         message: chainId && !isSepoliaChain(chainId) ? "Sepolia 네트워크로 전환해주세요." : current.message
@@ -92,10 +94,11 @@ export function WalletProvider({ children }) {
 
     return subscribeWalletEvents(ethereum, {
       onAccountsChanged: (accounts) => {
+        const activeAccount = getSelectedWalletAddress(ethereum, accounts);
         setWallet((current) => ({
           ...current,
-          account: isManuallyDisconnected ? "" : accounts[0] || "",
-          message: accounts[0]
+          account: isManuallyDisconnected ? "" : activeAccount,
+          message: activeAccount
             ? isManuallyDisconnected
               ? "MetaMask 계정이 변경되었습니다. 다시 Connect Wallet을 눌러 연결해주세요."
               : current.message
