@@ -16,7 +16,14 @@
     "test:phase6": "node scripts/verify-phase6.mjs",
     "test:phase7": "node scripts/verify-phase7.mjs",
     "test:phase8": "node scripts/verify-phase8.mjs",
-    "compile:contracts": "hardhat compile"
+    "compile:contracts": "hardhat compile",
+    "check:sepolia": "node scripts/check-sepolia-config.cjs",
+    "deploy:sepolia": "npm run compile:contracts && node scripts/deploy-sepolia.cjs",
+    "deploy:metamask:page": "npm run compile:contracts && node scripts/create-metamask-deploy-page.cjs",
+    "deploy:metamask:serve": "npm run deploy:metamask:page && vite tools --host 127.0.0.1 --port 8790",
+    "record:metamask:deployment": "node scripts/record-metamask-deployment.cjs",
+    "frontend:env": "node scripts/write-frontend-env.cjs",
+    "frontend:env:address": "node scripts/write-frontend-env-address.cjs"
   },
   "dependencies": {
     "ethers": "^6.15.0",

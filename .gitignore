@@ -4,5 +4,7 @@ artifacts/
 cache/
 .env
 .env.local
+deployments/*.json
+!deployments/*.example.json
 npm-debug.log*
 .DS_Store

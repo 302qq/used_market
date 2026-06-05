@@ -6,17 +6,22 @@ import { getDeploymentConfig, isSepoliaChain } from "../src/config/chain.js";
 
 const root = process.cwd();
 
-for (const file of [".env.example", "docs/demo-scenario.md", "src/components/RuntimeStatus.jsx"]) {
+for (const file of [".env.example", ".env.local.example", "docs/demo-scenario.md", "src/components/RuntimeStatus.jsx"]) {
   assert.equal(existsSync(path.join(root, file)), true, `Missing Phase 8 readiness file: ${file}`);
 }
 
 const envExample = readFileSync(path.join(root, ".env.example"), "utf8");
+for (const requiredEnv of ["SEPOLIA_RPC_URL=", "PRIVATE_KEY="]) {
+  assert.ok(envExample.includes(requiredEnv), `Missing deployment env value: ${requiredEnv}`);
+}
+
+const frontendEnvExample = readFileSync(path.join(root, ".env.local.example"), "utf8");
 for (const requiredEnv of [
   "VITE_USED_MARKET_CONTRACT_ADDRESS=",
   "VITE_SEPOLIA_CHAIN_ID=0xaa36a7",
   "VITE_CONTRACT_DEPLOY_BLOCK=0"
 ]) {
-  assert.ok(envExample.includes(requiredEnv), `Missing env value: ${requiredEnv}`);
+  assert.ok(frontendEnvExample.includes(requiredEnv), `Missing frontend env value: ${requiredEnv}`);
 }
 
 const deployment = getDeploymentConfig();
@@ -59,11 +64,11 @@ for (const route of ["#/market", "#/register", "#/my-items", "#/item/1", "#/tran
 for (const required of [
   "Runtime readiness",
   "Local preview",
-  "표시할 Public 물품이 없습니다.",
-  "지갑 연결이 필요합니다.",
-  "조회 불가",
-  "트랜잭션이 취소되었습니다.",
-  "소유권 이전 완료"
+  "Connect Wallet",
+  "Transaction Hash",
+  "Transfer Ownership",
+  "Register Item",
+  "조회 불가"
 ]) {
   assert.ok(sourceText.includes(required), `Missing integrated state marker: ${required}`);
 }
@@ -98,3 +103,5 @@ for (const step of [
 }
 
 console.log("PASS: Phase 8 readiness, env, ABI, final UI, and demo scenario checks passed.");
+
+

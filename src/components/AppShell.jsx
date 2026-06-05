@@ -4,6 +4,13 @@ import { useWallet } from "../context/WalletContext.jsx";
 import { shortenAddress } from "../utils/format.js";
 
 function Sidebar({ routes, activePath }) {
+  const wallet = useWallet();
+  const walletLabel = wallet.account
+    ? "Wallet Connected"
+    : wallet.isInstalled
+      ? "Connect Wallet"
+      : "MetaMask 필요";
+
   return (
     <aside className="sidebar">
       <a className="brand" href="#/">
@@ -26,6 +33,17 @@ function Sidebar({ routes, activePath }) {
             </a>
           ))}
       </nav>
+      <div className="sidebarWallet">
+        {wallet.account ? (
+          <Button variant="primary" className="wide" onClick={wallet.disconnect}>
+            {walletLabel}
+          </Button>
+        ) : (
+          <Button variant="primary" className="wide" onClick={wallet.connect} disabled={wallet.isConnecting || !wallet.isInstalled}>
+            {wallet.isConnecting ? "Connecting..." : walletLabel}
+          </Button>
+        )}
+      </div>
     </aside>
   );
 }
