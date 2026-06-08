@@ -11,6 +11,7 @@ import {
   updateItemOnChain
 } from "../services/usedMarket.js";
 import { filterPublicItems } from "../utils/items.js";
+import { useWallet } from "./WalletContext.jsx";
 
 const ItemRegistryContext = createContext(null);
 
@@ -22,30 +23,36 @@ function createTransferTxHash(itemId, count) {
   return `local-transfer-${String(itemId).padStart(4, "0")}-${String(count).padStart(2, "0")}`;
 }
 
+function createMockTransactionHistories() {
+  return mockTransactions.reduce((histories, record) => {
+    const key = Number(record.itemId);
+    histories[key] = [...(histories[key] || []), record];
+    return histories;
+  }, {});
+}
+
 export function ItemRegistryProvider({ children }) {
-  const [items, setItems] = useState(mockItems);
-  const [transactionHistories, setTransactionHistories] = useState(() =>
-    mockTransactions.reduce((histories, record) => {
-      const key = Number(record.itemId);
-      histories[key] = [...(histories[key] || []), record];
-      return histories;
-    }, {})
-  );
+  const wallet = useWallet();
+  const chainMode = isUsedMarketConfigured();
+  const [items, setItems] = useState(() => (chainMode ? [] : mockItems));
+  const [transactionHistories, setTransactionHistories] = useState(() => (chainMode ? {} : createMockTransactionHistories()));
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   async function refreshItems() {
-    if (!isUsedMarketConfigured()) return items;
+    if (!chainMode) return items;
 
     setIsLoading(true);
     setError("");
     try {
-      const latestItems = await fetchAllItems(getEthereum());
+      const latestItems = await fetchAllItems();
       setItems(latestItems);
       return latestItems;
     } catch (refreshError) {
-      setError(refreshError.message || "물품 목록을 불러오지 못했습니다.");
-      return items;
+      setItems([]);
+      setTransactionHistories({});
+      setError(refreshError.message || "Sepolia Smart Contract에서 물품 목록을 불러오지 못했습니다.");
+      return [];
     } finally {
       setIsLoading(false);
     }
@@ -53,12 +60,12 @@ export function ItemRegistryProvider({ children }) {
 
   useEffect(() => {
     refreshItems();
-  }, []);
+  }, [wallet.account, wallet.chainId]);
 
   async function registerItem(form, wallet) {
     setError("");
 
-    if (isUsedMarketConfigured()) {
+    if (chainMode) {
       if (!wallet.account) {
         throw new Error("MetaMask 지갑을 먼저 연결해주세요.");
       }
@@ -102,13 +109,14 @@ export function ItemRegistryProvider({ children }) {
   }
 
   async function getTransactionHistory(itemId) {
-    if (isUsedMarketConfigured()) {
+    if (chainMode) {
       try {
-        const records = await fetchTransactionHistory(getEthereum(), itemId);
+        const records = await fetchTransactionHistory(itemId);
         setTransactionHistories((current) => ({ ...current, [Number(itemId)]: records }));
         return records;
       } catch (historyError) {
         setError(historyError.message || "거래 이력을 불러오지 못했습니다.");
+        return [];
       }
     }
 
@@ -116,17 +124,22 @@ export function ItemRegistryProvider({ children }) {
   }
 
   async function refreshAllTransactionHistories() {
-    if (!isUsedMarketConfigured()) return transactionHistories;
+    if (!chainMode) return transactionHistories;
 
-    const entries = await Promise.all(
-      items.map(async (item) => {
-        const records = await fetchTransactionHistory(getEthereum(), item.itemId);
-        return [Number(item.itemId), records];
-      })
-    );
-    const nextHistories = Object.fromEntries(entries);
-    setTransactionHistories(nextHistories);
-    return nextHistories;
+    try {
+      const entries = await Promise.all(
+        items.map(async (item) => {
+          const records = await fetchTransactionHistory(item.itemId);
+          return [Number(item.itemId), records];
+        })
+      );
+      const nextHistories = Object.fromEntries(entries);
+      setTransactionHistories(nextHistories);
+      return nextHistories;
+    } catch (historyError) {
+      setError(historyError.message || "거래 이력을 불러오지 못했습니다.");
+      return transactionHistories;
+    }
   }
 
   async function setItemVisibility(itemId, isPublic, wallet) {
@@ -134,7 +147,7 @@ export function ItemRegistryProvider({ children }) {
     if (!item) throw new Error("물품을 찾을 수 없습니다.");
     if (!isOwner(item, wallet)) throw new Error("현재 소유자만 공개 여부를 변경할 수 있습니다.");
 
-    if (isUsedMarketConfigured()) {
+    if (chainMode) {
       await setItemVisibilityOnChain(getEthereum(), itemId, isPublic);
       await refreshItems();
     } else {
@@ -154,7 +167,7 @@ export function ItemRegistryProvider({ children }) {
     if (!isOwner(item, wallet)) throw new Error("현재 소유자만 물품 정보를 수정할 수 있습니다.");
     if (history.length > 0) throw new Error("소유권 이전 이력이 있는 물품은 정보를 수정할 수 없습니다.");
 
-    if (isUsedMarketConfigured()) {
+    if (chainMode) {
       await updateItemOnChain(getEthereum(), itemId, form);
       await refreshItems();
     } else {
@@ -183,7 +196,7 @@ export function ItemRegistryProvider({ children }) {
     if (!isOwner(item, wallet)) throw new Error("현재 소유자만 소유권을 이전할 수 있습니다.");
     if (!item.isPublic) throw new Error("Public 물품만 소유권 이전이 가능합니다.");
 
-    if (isUsedMarketConfigured()) {
+    if (chainMode) {
       if (!wallet.account) throw new Error("MetaMask 지갑을 먼저 연결해주세요.");
       if (!wallet.isSepolia) throw new Error("Sepolia 네트워크로 전환해주세요.");
 

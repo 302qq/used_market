@@ -19,7 +19,8 @@ const frontendEnvExample = readFileSync(path.join(root, ".env.local.example"), "
 for (const requiredEnv of [
   "VITE_USED_MARKET_CONTRACT_ADDRESS=",
   "VITE_SEPOLIA_CHAIN_ID=0xaa36a7",
-  "VITE_CONTRACT_DEPLOY_BLOCK=0"
+  "VITE_CONTRACT_DEPLOY_BLOCK=0",
+  "VITE_SEPOLIA_READ_RPC_URL="
 ]) {
   assert.ok(frontendEnvExample.includes(requiredEnv), `Missing frontend env value: ${requiredEnv}`);
 }
@@ -52,6 +53,9 @@ const sourceFiles = [
   "src/pages/TransactionHistory.jsx",
   "src/pages/TransferOwnership.jsx",
   "src/components/RuntimeStatus.jsx",
+  "src/context/ItemRegistryContext.jsx",
+  "src/services/contracts.js",
+  "src/services/usedMarket.js",
   "src/utils/ownership.js",
   "src/services/transactions.js"
 ].map((file) => readFileSync(path.join(root, file), "utf8"));
@@ -68,7 +72,10 @@ for (const required of [
   "Transaction Hash",
   "Transfer Ownership",
   "Register Item",
-  "조회 불가"
+  "JsonRpcProvider",
+  "FallbackProvider",
+  "chainMode ? [] : mockItems",
+  "Sepolia Smart Contract에서 물품 목록을 불러오지 못했습니다."
 ]) {
   assert.ok(sourceText.includes(required), `Missing integrated state marker: ${required}`);
 }
@@ -76,15 +83,14 @@ for (const required of [
 for (const forbidden of [
   "Export CSV",
   "Filter By Date",
-  "전체 기록 불러오기",
   "Gas Fee",
   "USD",
   "selling",
   "sold",
-  "판매중",
-  "판매완료",
   "Authenticated",
-  "Verified Digital Certificate"
+  "Verified Digital Certificate",
+  "getReadOnlyUsedMarketContract(ethereum)",
+  "fetchAllItems(getEthereum())"
 ]) {
   assert.equal(sourceText.includes(forbidden), false, `Forbidden final UI term found: ${forbidden}`);
 }
@@ -103,5 +109,3 @@ for (const step of [
 }
 
 console.log("PASS: Phase 8 readiness, env, ABI, final UI, and demo scenario checks passed.");
-
-

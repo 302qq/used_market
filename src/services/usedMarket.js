@@ -8,14 +8,14 @@ export function isUsedMarketConfigured() {
   return Boolean(USED_MARKET_CONTRACT_ADDRESS);
 }
 
-export async function fetchAllItems(ethereum) {
-  const contract = getReadOnlyUsedMarketContract(ethereum);
+export async function fetchAllItems() {
+  const contract = getReadOnlyUsedMarketContract();
   const items = await contract.getAllItems();
   return items.map(normalizeContractItem);
 }
 
-export async function fetchTransactionHistory(ethereum, itemId) {
-  const contract = getReadOnlyUsedMarketContract(ethereum);
+export async function fetchTransactionHistory(itemId) {
+  const contract = getReadOnlyUsedMarketContract();
   const records = await contract.getTransactionHistory(itemId);
   const txHashes = await fetchOwnershipTransferTxHashes(contract, itemId);
 

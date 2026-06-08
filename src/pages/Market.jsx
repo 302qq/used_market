@@ -3,11 +3,13 @@ import EmptyState from "../components/EmptyState.jsx";
 import ItemCard from "../components/ItemCard.jsx";
 import TextInput from "../components/TextInput.jsx";
 import { useItemRegistry } from "../context/ItemRegistryContext.jsx";
+import { useWallet } from "../context/WalletContext.jsx";
 import { categories } from "../data/categories.js";
 import { filterPublicItems } from "../utils/items.js";
 
 export default function Market() {
   const registry = useItemRegistry();
+  const wallet = useWallet();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("전체");
 
@@ -22,6 +24,9 @@ export default function Market() {
         <h2>Market</h2>
         <p>공개된 물품을 탐색하고 상세 페이지에서 소유권 이력을 확인합니다.</p>
         {registry.error ? <p className="pageAlert">{registry.error}</p> : null}
+        {wallet.chainId && !wallet.isSepolia ? (
+          <p className="pageAlert">MetaMask가 Sepolia 네트워크에 연결되어 있지 않습니다. 등록과 소유권 이전은 Sepolia에서만 가능합니다.</p>
+        ) : null}
       </section>
 
       <section className="toolbar">

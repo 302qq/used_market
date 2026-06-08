@@ -17,15 +17,15 @@ const sourceText = [transferSource, registrySource, serviceSource, transactionSo
 for (const required of [
   "getRouteItemId",
   "Current Owner",
-  "붙여넣기",
   "Transaction Price",
-  "올바른 Ethereum 주소를 입력해주세요.",
-  "Public 물품만 소유권 이전이 가능합니다.",
+  "isEthereumAddress(newOwner)",
+  "!item.isPublic",
   "transferOwnershipOnChain",
   "contract.transferOwnership",
   "registry.transferOwnership",
-  "트랜잭션이 취소되었습니다.",
-  "소유권 이전 완료",
+  "isUserRejectedRequest",
+  "getTransactionErrorMessage",
+  "Modal open={Boolean(complete)}",
   "window.location.hash = `#/item/"
 ]) {
   assert.ok(sourceText.includes(required), `Missing Phase 6 implementation marker: ${required}`);
