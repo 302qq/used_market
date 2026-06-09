@@ -2,6 +2,8 @@ const { readFile, writeFile } = require("node:fs/promises");
 const path = require("node:path");
 const { isAddress } = require("ethers");
 
+const SEPOLIA_READ_RPC_URL = "https://ethereum-sepolia-rpc.publicnode.com";
+
 async function main() {
   const deploymentPath = path.join(process.cwd(), "deployments", "sepolia.json");
   const deployment = JSON.parse(await readFile(deploymentPath, "utf8"));
@@ -23,6 +25,7 @@ async function main() {
     `VITE_USED_MARKET_CONTRACT_ADDRESS=${deployment.contractAddress}`,
     "VITE_SEPOLIA_CHAIN_ID=0xaa36a7",
     `VITE_CONTRACT_DEPLOY_BLOCK=${deployment.deployBlock}`,
+    `VITE_SEPOLIA_READ_RPC_URL=${SEPOLIA_READ_RPC_URL}`,
     ""
   ].join("\n");
 

@@ -53,6 +53,7 @@ const sourceFiles = [
   "src/pages/TransactionHistory.jsx",
   "src/pages/TransferOwnership.jsx",
   "src/components/RuntimeStatus.jsx",
+  "src/config/chain.js",
   "src/context/ItemRegistryContext.jsx",
   "src/services/contracts.js",
   "src/services/usedMarket.js",
@@ -73,9 +74,12 @@ for (const required of [
   "Transfer Ownership",
   "Register Item",
   "JsonRpcProvider",
-  "FallbackProvider",
+  "staticNetwork",
+  "https://ethereum-sepolia-rpc.publicnode.com",
+  "BLOCKED_BROWSER_RPC_HOSTS",
   "chainMode ? [] : mockItems",
-  "Sepolia Smart Contract에서 물품 목록을 불러오지 못했습니다."
+  "setItems([])",
+  "setError(refreshError.message"
 ]) {
   assert.ok(sourceText.includes(required), `Missing integrated state marker: ${required}`);
 }
@@ -90,7 +94,8 @@ for (const forbidden of [
   "Authenticated",
   "Verified Digital Certificate",
   "getReadOnlyUsedMarketContract(ethereum)",
-  "fetchAllItems(getEthereum())"
+  "fetchAllItems(getEthereum())",
+  "FallbackProvider"
 ]) {
   assert.equal(sourceText.includes(forbidden), false, `Forbidden final UI term found: ${forbidden}`);
 }
