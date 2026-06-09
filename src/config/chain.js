@@ -41,12 +41,18 @@ export function normalizeChainId(chainId) {
     return `0x${chainId.toString(16)}`;
   }
   if (typeof chainId === "number") {
+    if (!Number.isFinite(chainId)) return "";
     return `0x${chainId.toString(16)}`;
   }
   if (typeof chainId === "string") {
     const normalized = chainId.trim().toLowerCase();
     if (!normalized) return "";
-    return normalized.startsWith("0x") ? normalized : `0x${Number(normalized).toString(16)}`;
+    if (normalized.startsWith("0x")) {
+      return /^0x[0-9a-f]+$/.test(normalized) ? normalized : "";
+    }
+    const decimalChainId = Number(normalized);
+    if (!Number.isSafeInteger(decimalChainId) || decimalChainId < 0) return "";
+    return `0x${decimalChainId.toString(16)}`;
   }
   return "";
 }

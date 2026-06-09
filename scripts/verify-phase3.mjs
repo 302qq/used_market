@@ -43,7 +43,11 @@ function createMockEthereum({ accounts = ["0x1234567890abcdef1234567890abcdef123
 
 assert.equal(normalizeChainId(11155111), "0xaa36a7");
 assert.equal(normalizeChainId(11155111n), "0xaa36a7");
+assert.equal(normalizeChainId("11155111"), "0xaa36a7");
+assert.equal(normalizeChainId("0xAA36A7"), "0xaa36a7");
+assert.equal(normalizeChainId("11155111 # Sepolia"), "");
 assert.equal(isSepoliaChain("0xaa36a7"), true);
+assert.equal(isSepoliaChain("11155111"), true);
 assert.equal(isSepoliaChain("0x1"), false);
 
 assert.equal(shortenAddress("0x1234567890abcdef1234567890abcdef12345678"), "0x1234...5678");

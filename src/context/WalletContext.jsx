@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { isSepoliaChain } from "../config/chain.js";
+import { isSepoliaChain, normalizeChainId } from "../config/chain.js";
 import {
   connectWallet,
   getAccounts,
@@ -79,7 +79,8 @@ export function WalletProvider({ children }) {
         return;
       }
 
-      const [accounts, chainId] = await Promise.all([getAccounts(ethereum), getCurrentChainId(ethereum)]);
+      const [accounts, currentChainId] = await Promise.all([getAccounts(ethereum), getCurrentChainId(ethereum)]);
+      const chainId = normalizeChainId(currentChainId);
       const activeAccount = getSelectedWalletAddress(ethereum, accounts);
       setWallet((current) => ({
         ...current,
@@ -105,7 +106,8 @@ export function WalletProvider({ children }) {
             : "지갑 연결이 해제되었습니다."
         }));
       },
-      onChainChanged: (chainId) => {
+      onChainChanged: (currentChainId) => {
+        const chainId = normalizeChainId(currentChainId);
         setWallet((current) => ({
           ...current,
           chainId,
@@ -121,17 +123,18 @@ export function WalletProvider({ children }) {
 
     try {
       const result = await connectWallet(ethereum);
+      const chainId = normalizeChainId(result.chainId);
       setStoredDisconnect(false);
       setIsManuallyDisconnected(false);
       setWallet((current) => ({
         ...current,
         account: result.account,
-        chainId: result.chainId,
+        chainId,
         isInstalled: true,
         isConnecting: false,
-        message: result.isSepolia ? "" : "Sepolia 네트워크로 전환해주세요."
+        message: isSepoliaChain(chainId) ? "" : "Sepolia 네트워크로 전환해주세요."
       }));
-      return result;
+      return { ...result, chainId, isSepolia: isSepoliaChain(chainId) };
     } catch (error) {
       setWallet((current) => ({
         ...current,
@@ -151,7 +154,7 @@ export function WalletProvider({ children }) {
 
     let chainId = wallet.chainId;
     try {
-      chainId = await getCurrentChainId(ethereum);
+      chainId = normalizeChainId(await getCurrentChainId(ethereum));
     } catch {
       // Keep the last known chain id when MetaMask is unavailable.
     }
