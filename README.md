@@ -1,3 +1,5 @@
+[🇯🇵 日本語 README](./README.ja.md)
+
 # ChainTrust
 
 블록체인 기반 중고거래 이력 인증 서비스
